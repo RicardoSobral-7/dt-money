@@ -1,11 +1,11 @@
-import * as Dialog from "@radix-ui/react-dialog";
-import { CloseButton, Content, Overlay, TransactionType, TransactionTypeButton } from "./styles";
-import { ArrowCircleDown, ArrowCircleUp, X } from "phosphor-react";
-import { z } from "zod";
-import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useContext } from "react";
+import * as Dialog from "@radix-ui/react-dialog";
+import { ArrowCircleDown, ArrowCircleUp, X } from "phosphor-react";
+import { Controller, useForm } from "react-hook-form";
+import { useContextSelector } from "use-context-selector";
+import { z } from "zod";
 import { TransactionsContext } from "../../contexts/TransactionsContext";
+import { CloseButton, Content, Overlay, TransactionType, TransactionTypeButton } from "./styles";
 
 const newTransactionFormSchema = z.object({
   description: z.string(),
@@ -17,7 +17,10 @@ const newTransactionFormSchema = z.object({
 type NewTransactionFormInputs = z.infer<typeof newTransactionFormSchema>;
 
 export function NewTransactionModal() {
-  const { createTransaction } = useContext(TransactionsContext)
+  // agora para utilizar devemos usar o contextSelector e nele passar uma callback que irá retonar apenas o que nos realmente precisamos
+  const createTransaction = useContextSelector(TransactionsContext, (context) => {
+    return context.createTransaction
+  })
   {/* o portal é algo do react para "arrumar" a dom, ele faz com que o que vem dentro vá para outro local */ }
   const { control, register, handleSubmit, reset, formState: { isSubmitting } } = useForm<NewTransactionFormInputs>({
     resolver: zodResolver(newTransactionFormSchema),

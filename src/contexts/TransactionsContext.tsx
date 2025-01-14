@@ -1,5 +1,6 @@
-import { createContext, ReactNode, useEffect, useState } from "react";
+import { ReactNode, useCallback, useEffect, useState } from "react";
 import { api } from "../lib/axios";
+import { createContext } from "use-context-selector";
 
 interface Transaction {
   id: number;
@@ -19,14 +20,14 @@ interface TransactionsContextType {
 interface TransactionsProviderProps {
   children: ReactNode;
 }
-
+// o create context agora é importato do use-context-selector para conseguirmos parar com algumas renderizações desnecessárias
 export const TransactionsContext = createContext({} as TransactionsContextType)
 
 export function TransactionsProvider({ children }: TransactionsProviderProps) {
   const [transactions, setTransactiions] = useState<Transaction[]>([])
 
   // fizemos a exportação dessa função para que consigamos utilizar no componente SearchForm e com isso realizar a busca de transações
-  async function fetchTransactions(query?: string) {
+  const fetchTransactions = useCallback(async (query?: string) => {
     // agora para passar nosso objeto de  params temos essa segunda propriedade no método get
     const response = await api.get('/transactions', {
       params: {
@@ -37,9 +38,10 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
     })
 
     setTransactiions(response.data)
-  }
+  }, [])
 
-  async function createTransaction(transaction: Omit<Transaction, 'id' | 'createdAt'>) {
+
+  const createTransaction = useCallback(async (transaction: Omit<Transaction, 'id' | 'createdAt'>) => {
     const { category, description, price, type } = transaction
     // podemos capiturar o response aqui para não fazer 2 requests pra atualizar nossa home
     const response = await api.post('/transactions', {
@@ -50,7 +52,7 @@ export function TransactionsProvider({ children }: TransactionsProviderProps) {
       createdAt: new Date()
     })
     setTransactiions(prevState => [response.data, ...prevState])
-  }
+  }, [])
 
   useEffect(() => {
     fetchTransactions()
